@@ -1,162 +1,220 @@
+const yts = require("yt-search");
 const axios = require("axios");
-const fs = require('fs');
+const fs = require("fs-extra");
+const path = require("path");
 
-const baseApiUrl = async () => {
-	const base = await axios.get(
-`https://raw.githubusercontent.com/Mostakim0978/D1PT0/refs/heads/main/baseApiUrl.json`
-	);
-	return base.data.api;
-};
+const spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
 module.exports = {
-	config: {
-		name: "ytb",
-		version: "1.1.4",
-		aliases: ['youtube'],
-		author: "dipto",
-		countDown: 5,
-		role: 0,
-		description: {
-			en: "Download video, audio, and info from YouTube"
-		},
-		category: "media",
-		guide: {
-			en: "  {pn} [video|-v] [<video name>|<video link>]: use to download video from YouTube."
-				+ "\n   {pn} [audio|-a] [<video name>|<video link>]: use to download audio from YouTube"
-				+ "\n   {pn} [info|-i] [<video name>|<video link>]: use to view video information from YouTube"
-				+ "\n   Example:"
-				+ "\n {pn} -v chipi chipi chapa chapa"
-				+ "\n {pn} -a chipi chipi chapa chapa"
-				+ "\n {pn} -i chipi chipi chapa chapa"
-		}
-	},
-	onStart: async ({ api, args, event, commandName }) => {
-		const action = args[0].toLowerCase();
-		
-					const checkurl = /^(?:https?:\/\/)?(?:m\.|www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))((\w|-){11})(?:\S+)?$/;
-    const urlYtb = checkurl.test(args[1]);
-		let videoID
-  if(urlYtb){
-		if (action === '-v' || action === '-a') {
-			try {
-				const format = action === '-v' ? 'mp4' : 'mp3';
-				const path = `ytb_${format}_${videoID}.${format}`;
-	  
-	const match = args[1].match(checkurl);
-  videoID = match ? match[1] : null;
-				const { data: { title, downloadLink, quality } } = await axios.get(`${await baseApiUrl()}/ytDl3?link=${videoID}&format=${format}&quality=3`);
-await api.sendMessage({
-					body: `• Title: ${title}\n• Quality: ${quality}`,
-					attachment: await dipto(downloadLink, path)
-				}, event.threadID, () => fs.unlinkSync(path), event.messageID);
-			} catch (e) {
-				console.error(e);
-				return api.sendMessage('❌ Failed to download the video/audio. Please try again later.', event.threadID, event.messageID);
-			}
-		} }
-		args.shift();
-		let keyWord = args.join(" ");
-		const maxResults = 6;
-		let result;
-		try {
-			result = (await axios.get(`${await baseApiUrl()}/ytFullSearch?songName=${keyWord}`)).data.slice(0, maxResults);
-		} catch (err) {
-			return api.sendMessage("❌ An error occurred: " + err.message, event.threadID, event.messageID);
-		}
-
-		if (result.length === 0) {
-			return api.sendMessage("⭕ No search results match the keyword: " + keyWord, event.threadID, event.messageID);
-		}
-
-		let msg = "";
-		let i = 1;
-		const thumbnails = [];
-		for (const info of result) {
-			thumbnails.push(diptoSt(info.thumbnail, `thumbnail.jpg`));
-			msg += `${i++}. ${info.title}\nTime: ${info.time}\nChannel: ${info.channel.name}\n\n`;
-		}
-
-		api.sendMessage({
-			body: msg + "Reply to this message with a number to choose",
-			attachment: await Promise.all(thumbnails)
-		}, event.threadID, (err, info) => {		global.GoatBot.onReply.set(info.messageID, {
-				commandName,
-				messageID: info.messageID,
-				author: event.senderID,
-				result,
-				action
-			});
-		}, event.messageID);
-	},
-
-	onReply: async ({ event, api, Reply }) => {
-		const { result, action } = Reply;
-		const choice = parseInt(event.body);
-
-		if (isNaN(choice) || choice <= 0 || choice > result.length) {
-			return api.sendMessage('❌ Invalid choice. Please reply with a valid number.', event.threadID, event.messageID);
-		}
-
-		const selectedVideo = result[choice - 1];
-		const videoID = selectedVideo.id;
-
-		if (action === '-v' || action === 'video' || action === 'mp4' || action === '-a'  || action === 'audio' || action === 'mp3' || action === 'music') {
-			try {
-				let format = ['-a', 'audio', 'mp3', 'music'].includes(action) ? 'mp3' : 'mp4';
-				const path = `ytb_${format}_${videoID}.${format}`;
-				const { data: { title, downloadLink, quality } } = await axios.get(`${await baseApiUrl()}/ytDl3?link=${videoID}&format=${format}&quality=3`);
-
-				api.unsendMessage(Reply.messageID);
-				await api.sendMessage({
-					body: `• Title: ${title}\n• Quality: ${quality}`,
-					attachment: await dipto(downloadLink, path)
-				}, event.threadID, () => fs.unlinkSync(path), event.messageID);
-			} catch (e) {
-				console.error(e);
-				return api.sendMessage('❌ Failed to download the video/audio. Please try again later.', event.threadID, event.messageID);
-			}
-		}
-
-	if (action === '-i' || action === 'info') {
-			try {
-				const { data } = await axios.get(`${await baseApiUrl()}/ytfullinfo?videoID=${videoID}`);
-				api.unsendMessage(Reply.messageID);
-				await api.sendMessage({
-					body: `✨ | 𝚃𝚒𝚝𝚕𝚎: ${data.title}\n⏳ | 𝙳𝚞𝚛𝚊𝚝𝚒𝚘𝚗: ${data.duration / 60} minutes\n𝚁𝚎𝚜𝚘𝚕𝚞𝚝𝚒𝚘𝚗: ${data.resolution}\n👀 | 𝚅𝚒𝚎𝚠 𝙲𝚘𝚞𝚗𝚝: ${data.view_count}\n👍🏻 | 𝙻𝚒𝚔𝚎𝚜: ${data.like_count}\n📬 | 𝙲𝚘𝚖𝚖𝚎𝚗𝚝𝚜: ${data.comment_count}\n♻️ | 𝙲𝚊𝚝𝚎𝚐𝚘𝚛𝚒𝚎𝚜: ${data.categories[0]}\n🌐 | 𝙲𝚑𝚊𝚗𝚗𝚎𝚕: ${data.channel}\n🧍🏻‍♂️ | 𝚄𝚙𝚕𝚘𝚊𝚍𝚎𝚛 𝙸𝚍: ${data.uploader_id}\n👥 | 𝚂𝚞𝚋𝚜𝚌𝚛𝚒𝚋𝚎𝚛𝚜: ${data.channel_follower_count}\n🔗 | 𝙲𝚑𝚊𝚗𝚗𝚎𝚕 𝚄𝚛𝚕: ${data.channel_url}\n🔗 | 𝚅𝚒𝚍𝚎𝚘 𝚄𝚛𝚕: ${data.webpage_url}`,
-					attachment: await diptoSt(data.thumbnail, 'info_thumb.jpg')
-				}, event.threadID, event.messageID);
-			} catch (e) {
-				console.error(e);
-				return api.sendMessage('❌ Failed to retrieve video info. Please try again later.', event.threadID, event.messageID);
-			}
-		}
-	}
-};
-async function dipto(url,pathName) {
-	try {
-		const response = (await axios.get(url,{
-			responseType: "arraybuffer"
-		})).data;
-
-		fs.writeFileSync(pathName, Buffer.from(response));
-		return fs.createReadStream(pathName);
-	}
-	catch (err) {
-		throw err;
-	}
-}
-async function diptoSt(url,pathName) {
-	try {
-		const response = await axios.get(url,{
-			responseType: "stream"
-		});
-		response.data.path = pathName;
-		return response.data;
-	}
-	catch (err) {
-		throw err;
-	}
-}h (err) {
-		throw err;
-	}
+  config: {
+    name: "ytb",
+    version: "1.5",
+    author: "Nyx",
+    countDown: 5,
+    role: 0,
+    description: {
+      en: "Search and download YouTube videos or audio (under 10 minutes)"
+    },
+    category: "MEDIA",
+    guide: {
+      en: "{pn} [video|-v] [<video name>]: Search and download video from YouTube\n" +
+        "{pn} [audio|-a] [<video name>]: Search and download audio from YouTube\n" +
+        "{pn} [info|-i] [<video name>]: Get video information from YouTube\n" +
+        "{pn} [url|-u] [<video url>] [video|-v | audio|-a]: Download video or audio from URL"
     }
+  },
+  
+  onStart: async function({ args, message, event, commandName, api }) {
+    const type = args[0];
+    const query = args.slice(1).join(" ");
+    
+    if (!type || !query) {
+      return message.reply("Please specify the type and query.");
+    }
+    
+    if (type === "-u" || type === "url") {
+      const url = args[1];
+      const action = args[2];
+      
+      if (!url || !action) {
+        return message.reply("Please provide a valid URL and action.");
+      }
+      
+      if (action === "-v" || action === "video") {
+        await downloadVideo(url, message);
+      } else if (action === "-a" || action === "audio") {
+        const videoId = extractVideoId(url);
+        await downloadYouTubeAudio(videoId, message);
+      } else {
+        return message.reply("Invalid action. Use -v for video or -a for audio.");
+      }
+    }
+    else if (type === "-v" || type === "video" || type === "-a" || type === "audio" || type === "-i" || type === "info") {
+      const loadingMessage = await message.reply(`${spinner[0]} Searching...`);
+      let currentFrame = 0;
+      const intervalId = setInterval(async () => {
+        currentFrame = (currentFrame + 1) % spinner.length;
+        await api.editMessage(`${spinner[currentFrame]} Searching...`, loadingMessage.messageID);
+      }, 200);
+      
+      try {
+        const searchResults = await searchYouTube(query);
+        
+        clearInterval(intervalId);
+        await api.unsendMessage(loadingMessage.messageID);
+        
+        if (searchResults.length === 0) {
+          return message.reply("⛔ No results found.");
+        }
+        
+        if (type === "-i" || type === "info") {
+          const firstVideo = searchResults[0];
+          const videoInfo = await getVideoInfo(firstVideo.id);
+          return message.reply({
+            body: `Title: ${videoInfo.title}\nDuration: ${videoInfo.duration}\nViews: ${videoInfo.views}\nUpload Date: ${videoInfo.uploadDate}\nURL: ${firstVideo.url}`,
+            attachment: await getStreamFromURL(videoInfo.thumbnail)
+          });
+        }
+        
+        const limitedResults = searchResults.slice(0, 5);
+        
+        const messageBody = limitedResults.map((result, index) =>
+          `${index + 1}. ${result.title}\n`
+        ).join("\n");
+        
+        const listMessage = await message.reply({
+          body: `🎬 Please choose a track:\n\n${messageBody}`,
+          attachment: await Promise.all(limitedResults.map(result => getStreamFromURL(result.thumbnail)))
+        });
+        
+        global.GoatBot.onReply.set(listMessage.messageID, {
+          commandName,
+          messageID: listMessage.messageID,
+          author: event.senderID,
+          searchResults: limitedResults,
+          type
+        });
+        
+      } catch (error) {
+        clearInterval(intervalId);
+        await api.unsendMessage(loadingMessage.messageID);
+        await message.reply(`❌ Error occurred during search: ${error.message}`);
+      }
+    }
+  },
+  
+  onReply: async ({ event, api, Reply, message }) => {
+    const { searchResults, type } = Reply;
+    const choice = parseInt(event.body);
+    
+    if (!isNaN(choice) && choice >= 1 && choice <= searchResults.length) {
+      const selectedTrack = searchResults[choice - 1];
+      await api.unsendMessage(Reply.messageID);
+      const loadingMessage = await message.reply(`${spinner[0]} Downloading...`);
+      let currentFrame = 0;
+      const intervalId = setInterval(async () => {
+        currentFrame = (currentFrame + 1) % spinner.length;
+        await api.editMessage(`${spinner[currentFrame]} Downloading...`, loadingMessage.messageID);
+      }, 200);
+      
+      try {
+        if (type === "-v" || type === "video") {
+          await downloadVideo(selectedTrack.url, message);
+        } else if (type === "-a" || type === "audio") {
+          const videoId = extractVideoId(selectedTrack.url);
+          await downloadYouTubeAudio(videoId, message);
+        }
+        
+        clearInterval(intervalId);
+        await api.unsendMessage(loadingMessage.messageID);
+        await api.unsendMessage(Reply.messageID);
+      } catch (error) {
+        clearInterval(intervalId);
+        await api.unsendMessage(loadingMessage.messageID);
+        await message.reply(`❌ Download failed: ${error.message}`);
+      }
+    } else {
+      await message.reply("❌ Invalid selection. Please choose a valid number.");
+    }
+  }
+};
+
+async function searchYouTube(query) {
+  const searchResults = await yts(query);
+  return searchResults.videos
+    .filter(video => {
+      const duration = video.duration.seconds;
+      return duration <= 600;
+    })
+    .map(video => ({
+      id: video.videoId,
+      title: video.title,
+      duration: video.duration.timestamp,
+      thumbnail: video.thumbnail,
+      url: `https://www.youtube.com/watch?v=${video.videoId}`
+    }));
+}
+async function downloadVideo(url, message) {
+  try {
+    const response = await axios.get(`https://www.noobz-api.rf.gd/api/ytv?d=${encodeURIComponent(url)}&type=mp4`);
+    const videoUrl = response.data.url;
+    const tempFilePath = path.join(__dirname, 'nyx_video.mp4');
+    const videoData = await axios({
+      url: videoUrl,
+      responseType: 'arraybuffer'
+    });
+
+    fs.writeFileSync(tempFilePath, videoData.data);
+    await message.reply({
+      body: "Here is YouTube video",
+      attachment: fs.createReadStream(tempFilePath)
+    });
+    fs.unlinkSync(tempFilePath);
+
+  } catch (error) {
+    await message.reply("❌ Failed to download video.");
+  }
+}
+
+async function downloadYouTubeAudio(videoId, message) {
+  try {
+    const response = await axios.get(`https://www.noobz-api.rf.gd/api/ytv?d=https://www.youtube.com/watch?v=${videoId}&type=mp3`);
+    const audioUrl = response.data.url;
+    const tempFilePath = path.join(__dirname, 'nyx_audio.mp3');
+    const audioData = await axios({
+      url: audioUrl,
+      responseType: 'arraybuffer'
+    });
+
+    fs.writeFileSync(tempFilePath, audioData.data);
+    await message.reply({
+      body: "🎵 Audio downloaded",
+      attachment: fs.createReadStream(tempFilePath)
+    });
+    fs.unlinkSync(tempFilePath);
+
+  } catch (error) {
+    await message.reply("❌ Failed to download audio.");
+  }
+}
+
+async function getVideoInfo(videoId) {
+  const video = await yts({ videoId });
+  return {
+    title: video.title,
+    duration: video.duration.timestamp,
+    views: video.views,
+    uploadDate: video.uploadDate,
+    thumbnail: video.thumbnail
+  };
+}
+
+async function getStreamFromURL(url) {
+  const response = await axios({ url, responseType: 'stream' });
+  return response.data;
+}
+
+function extractVideoId(url) {
+  const match = url.match(/[?&]v=([^&]+)/);
+  return match ? match[1] : url.split("/").pop();
+		  }
