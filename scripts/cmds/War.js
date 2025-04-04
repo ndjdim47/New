@@ -17,7 +17,7 @@ function writeWarJson(data) {
 const m = [
 
 
-  "yourtext",
+  "gu kha ",
   "yourtext"
 ];
 let t = [];
