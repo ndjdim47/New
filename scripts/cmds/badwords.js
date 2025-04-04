@@ -1,4 +1,4 @@
-module.exports = {
+ module.exports = {
 	config: {
 		name: "badwords",
 		aliases: ["badword"],
@@ -124,3 +124,92 @@ module.exports = {
 			}
 			case "on": {
 				if (role < 1)
+					return message.reply(getLang("onlyAdmin3", getLang("onText")));
+				await threadsData.set(event.threadID, true, "settings.badWords");
+				message.reply(getLang("turnedOnOrOff", getLang("onText")));
+				break;
+			}
+			case "off": {
+				if (role < 1)
+					return message.reply(getLang("onlyAdmin3", getLang("offText")));
+				await threadsData.set(event.threadID, false, "settings.badWords");
+				message.reply(getLang("turnedOnOrOff", getLang("offText")));
+				break;
+			}
+			case "unwarn": {
+				if (role < 1)
+					return message.reply(getLang("onlyAdmin4"));
+				let userID;
+				if (Object.keys(event.mentions)[0])
+					userID = Object.keys(event.mentions)[0];
+				else if (args[1])
+					userID = args[1];
+				else if (event.messageReply)
+					userID = event.messageReply.senderID;
+				if (isNaN(userID))
+					return message.reply(getLang("missingTarget"));
+				const violationUsers = await threadsData.get(event.threadID, "data.badWords.violationUsers", {});
+				if (!violationUsers[userID])
+					return message.reply(getLang("notWarned", userID));
+				violationUsers[userID]--;
+				await threadsData.set(event.threadID, violationUsers, "data.badWords.violationUsers");
+				const userName = await usersData.getName(userID);
+				message.reply(getLang("unwarned", userID, userName));
+			}
+		}
+	},
+
+	onChat: async function ({ message, event, api, threadsData, prefix, getLang }) {
+		if (!event.body)
+			return;
+		const threadData = global.db.allThreadData.find(t => t.threadID === event.threadID) || await threadsData.create(event.threadID);
+		const isEnabled = threadData.settings.badWords;
+		if (!isEnabled)
+			return;
+		const allAliases = [...(global.GoatBot.commands.get("badwords").config.aliases || []), ...(threadData.data.aliases?.["badwords"] || [])];
+		const isCommand = allAliases.some(a => event.body.startsWith(prefix + a));
+		if (isCommand)
+			return;
+		const badWordList = threadData.data.badWords?.words;
+		if (!badWordList || badWordList.length === 0)
+			return;
+		const violationUsers = threadData.data.badWords?.violationUsers || {};
+
+		for (const word of badWordList) {
+			if (event.body.match(new RegExp(`\\b${word}\\b`, "gi"))) {
+				if ((violationUsers[event.senderID] || 0) < 1) {
+					message.reply(getLang("warned", word));
+					violationUsers[event.senderID] = violationUsers[event.senderID] ? violationUsers[event.senderID] + 1 : 1;
+					await threadsData.set(event.threadID, violationUsers, "data.badWords.violationUsers");
+					return;
+				}
+				else {
+					await message.reply(getLang("warned2", word));
+					api.removeUserFromGroup(event.senderID, event.threadID, (err) => {
+						if (err)
+							return message.reply(getLang("needAdmin"), (e, info) => {
+								let { onEvent } = global.GoatBot;
+								onEvent.push({
+									messageID: info.messageID,
+									onStart: ({ event }) => {
+										if (event.logMessageType === "log:thread-admins" && event.logMessageData.ADMIN_EVENT == "add_admin") {
+											const { TARGET_ID } = event.logMessageData;
+											if (TARGET_ID == api.getCurrentUserID())
+												api.removeUserFromGroup(event.senderID, event.threadID, () => onEvent = onEvent.filter(item => item.messageID != info.messageID));
+										}
+									}
+								});
+							});
+					});
+				}
+			}
+		}
+	}
+};
+
+
+function hideWord(str) {
+	return str.length == 2 ?
+		str[0] + "*" :
+		str[0] + "*".repeat(str.length - 2) + str[str.length - 1];
+			}
