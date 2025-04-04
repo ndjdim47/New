@@ -62,7 +62,7 @@ module.exports = {
       msg += `\n𝗧𝘆𝗽𝗲 ${prefix}𝗵𝗲𝗹𝗽 𝗰𝗺𝗱𝗡𝗮𝗺𝗲 𝘁𝗼 𝘃𝗶𝗲𝘄 𝘁𝗵𝗲 𝗱𝗲𝘁𝗮𝗶𝗹𝘀 𝗼𝗳 𝘁𝗵𝗮𝘁 𝗰𝗼𝗺𝗺𝗮𝗻𝗱\n`;
       msg += `\n🫧𝑩𝑶𝑻 𝑵𝑨𝑴𝑬🫧:🎭𝘛ₒₓᵢ𝚌ᵢ𝚝ₑᵣ⭕`;
       msg += `\n𓀬 𝐁𝐎𝐓 𝐎𝐖𝐍𝐄𝐑 𓀬`;
-      msg += `\n 	 					`;
+      msg += `\n 	https://i.imgur.com/3oy9U6E.mp4 					`;
       msg += `\n~𝙉𝘼𝙈𝙀:♡︎ Ayanokōji😐♡︎`;
       msg += `\n~𝙁𝘽:https://www.facebook.com/profile.php?id=61558762813083`;
 
