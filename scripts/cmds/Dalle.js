@@ -31,4 +31,4 @@ const imageUrls = response.data.imgUrls || [];
       api.sendMessage(`Generation failed!\nError: ${error.message}`, event.threadID, event.messageID);
     }
   }
-  }
+}
