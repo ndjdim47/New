@@ -1,3 +1,4 @@
+
 const { loadImage, createCanvas } = require("canvas");
 const axios = require("axios");
 const fs = require("fs-extra");
@@ -56,8 +57,8 @@ module.exports = {
       "https://i.postimg.cc/0rgC9kxY/background1.png",
       "https://i.postimg.cc/bw94VMHC/background2.png",
       "https://i.postimg.cc/rm3HtLMm/background3.png",
-      "https://i.postimg.cc/QtQ6VK46/background4.png",, 
-
+      "https://i.postimg.cc/QtQ6VK46/background4.png",
+      
     ];
     var rd = background[Math.floor(Math.random() * background.length)];
     let getAvtmot = (
