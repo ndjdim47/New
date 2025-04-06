@@ -1,4 +1,4 @@
-const { execSync } = require('child_process');
+ const { execSync } = require('child_process');
 
 module.exports = {
   config: {
@@ -27,7 +27,7 @@ module.exports = {
       const s = Math.floor(uptime % 60);
 
       const totalMem = (parseInt(execSync("grep MemTotal /proc/meminfo | awk '{print $2}'")) / (1024 * 1024)).toFixed(2);
-const freeMem = (parseInt(execSync("grep MemAvailable /proc/meminfo | awk '{print $2}'")) / (1024 * 1024)).toFixed(2);
+      const freeMem = (parseInt(execSync("grep MemAvailable /proc/meminfo | awk '{print $2}'")) / (1024 * 1024)).toFixed(2);
       const cpuModel = execSync("grep 'model name' /proc/cpuinfo | uniq | cut -d: -f2").toString().trim();
       const cpuCores = parseInt(execSync("nproc"));
       const cpuUsage = execSync("top -bn1 | grep '%Cpu' | awk '{print $2 + $4}'").toString().trim();
@@ -52,7 +52,7 @@ const freeMem = (parseInt(execSync("grep MemAvailable /proc/meminfo | awk '{prin
 ╰━━━━━━━━━━━━━━━━━━━━╯
 
 ╭━━〔 🖥 𝐒𝐄𝐑𝐕𝐄𝐑 𝐒𝐓𝐀𝐓𝐒 〕━━╮
-┃🧠 𝗥𝗔𝗠    : ${freeMem}GB free/ ${totalMem}GB
+┃🧠 𝗥𝗔𝗠    : ${freeMem}GB free / ${totalMem}GB
 ┃💽 𝗗𝗶𝘀𝗸     : ${diskUsage} used (T: ${diskTotal}, F: ${diskFree})
 ┃⚙️ 𝗖𝗣𝗨     : ${cpuModel}
 ┃🔢 𝗖𝗼𝗿𝗲𝘀   : ${cpuCores}
@@ -60,8 +60,8 @@ const freeMem = (parseInt(execSync("grep MemAvailable /proc/meminfo | awk '{prin
 ╰━━━━━━━━━━━━━━━━━━━━╯
 
 ╭━〔 ⚙️ 𝐒𝐘𝐒𝐓𝐄𝐌 〕━━━━━━━╮
-┃🖥 𝗢𝗦            : ${osVersion}
-┃📦 𝗡𝗼𝗱𝗲.𝗷𝘀       : ${nodeVersion}
+┃🖥 𝗢𝗦  : ${osVersion}
+┃📦 𝗡𝗼𝗱𝗲.𝗷𝘀  : ${nodeVersion}
 ┃🔒 𝗠𝗲𝗱𝗶𝗮 𝗕𝗮𝗻𝗻𝗲𝗱  : ${mediaBan ? '🚫 Yes' : '✅ No'}
 ╰━━━━━━━━━━━━━━━━━━━━╯`;
 
@@ -89,6 +89,13 @@ const freeMem = (parseInt(execSync("grep MemAvailable /proc/meminfo | awk '{prin
     } catch (err) {
       console.error(err);
       return message.reply("❌ Error occurred:\n" + err.message);
+    }
+  },
+
+  onChat: async function ({ event, message, usersData, threadsData, api }) {
+    const body = event.body?.toLowerCase();
+    if (body === 'upt' || body === 'rtm') {
+      await this.onStart({ message, event, usersData, threadsData, api });
     }
   }
 };
