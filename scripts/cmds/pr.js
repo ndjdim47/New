@@ -1,4 +1,3 @@
-
 const { loadImage, createCanvas } = require("canvas");
 const axios = require("axios");
 const fs = require("fs-extra");
@@ -57,17 +56,7 @@ module.exports = {
       "https://i.postimg.cc/0rgC9kxY/background1.png",
       "https://i.postimg.cc/bw94VMHC/background2.png",
       "https://i.postimg.cc/rm3HtLMm/background3.png",
-      "https://i.postimg.cc/QtQ6VK46/background4.png",
-      "https://i.postimg.cc/wxkfpJsM/background5.png",
-      "https://i.postimg.cc/vZCXztCq/background6.png",
-      "https://i.postimg.cc/FRVZh5z8/background7.png",
-      "https://i.postimg.cc/fyWvL20L/background8.png",
-      "https://i.postimg.cc/zvdFRCnk/background9.png",
-      "https://i.postimg.cc/y6nP5HwS/background10.png",
-      "https://i.postimg.cc/rpSG9X1s/background11.png",
-      "https://i.postimg.cc/B6pxdTwG/background12.png",
-      "https://i.postimg.cc/zvfn5y9H/background13.png",
-      "https://i.postimg.cc/jdmz0dvC/background14.png", 
+      "https://i.postimg.cc/QtQ6VK46/background4.png",, 
 
     ];
     var rd = background[Math.floor(Math.random() * background.length)];
